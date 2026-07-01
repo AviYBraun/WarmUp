@@ -1,0 +1,1030 @@
+Loading assignment PDF: /home/avib1027/scaffold-ai/sample_assignment.pdf
+Warning: no extractable text found on page 16.
+Warning: no extractable text found on page 17.
+Warning: no extractable text found on page 18.
+Agent 1: Extracting technical primitives...
+Agent 2: Generating conceptual scaffolding...
+Agent 3: Generating isolated warm-up drills...
+Agent 3.1: Generating drill for multi-threading...
+Agent 3.2: Generating drill for thread pool...
+Agent 3.3: Generating drill for producer-consumer model...
+Agent 3.4: Generating drill for synchronization...
+Agent 3.5: Generating drill for mutex...
+Agent 3.6: Generating drill for condition variables...
+Agent 3.7: Generating drill for reader-writer lock...
+Agent 3.8: Generating drill for exclusive access...
+Agent 3.9: Generating drill for concurrent read access...
+Agent 3.10: Generating drill for error checking...
+Agent 3.11: Generating drill for logging...
+Agent 3.12: Generating drill for request handling...
+Agent 3.13: Generating drill for statistics collection...
+Agent 3.14: Generating drill for UDP communication...
+Agent 3.15: Generating drill for debugging sleep...
+
+================================================================================
+Detected Primary Language
+================================================================================
+C
+
+================================================================================
+Step 1: Extracted Technical Primitives
+================================================================================
+{
+  "primary_language": "C",
+  "primitives": [
+    "multi-threading",
+    "thread pool",
+    "producer-consumer model",
+    "synchronization",
+    "mutex",
+    "condition variables",
+    "reader-writer lock",
+    "exclusive access",
+    "concurrent read access",
+    "error checking",
+    "logging",
+    "request handling",
+    "statistics collection",
+    "UDP communication",
+    "debugging sleep"
+  ]
+}
+
+================================================================================
+Step 2: Conceptual Scaffolding
+================================================================================
+### Conceptual Guide for HW3: Multi-threaded Web Server and Synchronization
+
+#### Overview
+In this assignment, you will develop a multi-threaded web server that efficiently handles multiple HTTP requests concurrently while maintaining a log of handled jobs. The core concepts revolve around multi-threading, synchronization, and effective resource management. Understanding how these concepts interconnect will help you design a robust solution.
+
+#### Key Concepts and Their Connections
+
+1. **Multi-threading and Thread Pool**: 
+   - The server must handle multiple requests simultaneously. Instead of creating a new thread for each request (which is inefficient), you will implement a **fixed-size thread pool**. This allows a set number of worker threads to process requests, enhancing performance and resource management.
+
+2. **Producer-Consumer Model**: 
+   - The architecture follows a **producer-consumer model** where the master thread (producer) accepts incoming requests and places them into a bounded FIFO queue, while worker threads (consumers) process these requests. This model helps in decoupling request acceptance from processing, allowing for better scalability.
+
+3. **Synchronization**: 
+   - With multiple threads accessing shared resources (like the request queue and the server log), **synchronization** is crucial to prevent race conditions. You will use:
+     - **Mutexes** to ensure exclusive access to shared resources.
+     - **Condition variables** to manage thread waiting and signaling, preventing busy-waiting.
+
+4. **Reader-Writer Lock**: 
+   - Since the server log will be accessed by both GET and POST requests, implementing a **reader-writer lock** is essential. GET requests (writers) require exclusive access to append entries, while POST requests (readers) can read concurrently. You will prioritize writers to prevent starvation of log updates.
+
+5. **Error Checking and Logging**: 
+   - Robust error checking is critical in a multi-threaded environment to ensure that unexpected issues do not lead to crashes. Additionally, logging request statistics is important for monitoring server performance and debugging. You will implement structured logging to capture request handling times and other metrics.
+
+6. **UDP Communication**: 
+   - Beyond handling HTTP requests, your server will also support UDP communication for statistics collection. This involves managing separate threads for handling UDP pings, which should be prioritized to respond quickly to administrative requests without blocking HTTP processing.
+
+7. **Debugging Sleep**: 
+   - To simulate real-world conditions, you will implement a debugging feature that introduces a controlled sleep during log read/write operations. This helps in testing the server's performance under load and ensures that your synchronization mechanisms are functioning correctly.
+
+#### Why These Concepts Matter
+Understanding and effectively implementing these concepts will lead to a well-structured, efficient, and scalable web server. The multi-threading model allows for handling multiple requests simultaneously, improving user experience. Synchronization ensures data integrity and prevents race conditions, which are common pitfalls in concurrent programming. The logging and statistics collection will provide insights into server performance, allowing for future optimizations.
+
+### Implementation Strategy
+- **Start by setting up the thread pool** and implementing the producer-consumer model with a bounded queue.
+- **Focus on synchronization mechanisms** (mutexes and condition variables) to manage access to shared resources.
+- **Implement the reader-writer lock** for the server log, ensuring that GET and POST requests are handled appropriately.
+- **Integrate error checking and logging** throughout your code to maintain robustness.
+- **Add UDP handling** for statistics collection, ensuring it runs concurrently with TCP request handling.
+- **Test your server** under various loads to ensure that it behaves as expected, especially with the debugging sleep feature.
+
+By connecting these concepts into a coherent mental model, you will be able to tackle the assignment systematically and effectively. Good luck!
+
+================================================================================
+Step 3: Warm-Up Code Drills
+================================================================================
+## Drill 1: multi-threading
+
+```c
+/* 
+ * Micro-challenge: Implement a multi-threaded function that processes 
+ * incoming HTTP requests concurrently. The function should handle 
+ * both GET and POST requests, ensuring that GET requests (which 
+ * modify the server's log) have exclusive access while POST requests 
+ * (which read the log) can be processed concurrently. 
+ * Use appropriate synchronization mechanisms to avoid race conditions 
+ * and ensure thread safety.
+ */
+void process_request(int client_socket) {
+    // TODO: Implement your solution here
+}
+
+int main() {
+    // Setup dummy inputs
+    int client_socket = 1; // Dummy client socket for testing
+
+    // Call the target function
+    process_request(client_socket);
+
+    // Assertions to verify the implementation
+    // Here we would normally check the state of the server log or 
+    // the response sent back to the client, but since this is a 
+    // placeholder, we will just print a message for demonstration.
+    printf("Request processed successfully.\n");
+
+    return 0;
+}
+```
+
+## Drill 2: thread pool
+
+```c
+/*
+ * Micro-challenge: Implement a thread pool to handle multiple HTTP requests concurrently.
+ * The thread pool should consist of a fixed number of worker threads that process requests 
+ * from a shared queue. The master thread will accept incoming connections and add them to 
+ * the queue, while worker threads will retrieve and process these requests.
+ */
+
+void thread_pool_http_server(void) {
+    // TODO: Implement your solution here
+}
+
+#include <stdio.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define NUM_THREADS 4
+#define QUEUE_SIZE 10
+
+typedef struct {
+    int request_id;
+} Request;
+
+typedef struct {
+    Request queue[QUEUE_SIZE];
+    int front;
+    int rear;
+    int count;
+    pthread_mutex_t lock;
+    pthread_cond_t not_empty;
+    pthread_cond_t not_full;
+} RequestQueue;
+
+RequestQueue request_queue;
+
+void* worker_thread(void* arg) {
+    while (1) {
+        pthread_mutex_lock(&request_queue.lock);
+        while (request_queue.count == 0) {
+            pthread_cond_wait(&request_queue.not_empty, &request_queue.lock);
+        }
+        Request request = request_queue.queue[request_queue.front];
+        request_queue.front = (request_queue.front + 1) % QUEUE_SIZE;
+        request_queue.count--;
+        pthread_cond_signal(&request_queue.not_full);
+        pthread_mutex_unlock(&request_queue.lock);
+
+        // Process the request (placeholder)
+        printf("Processing request %d\n", request.request_id);
+        sleep(1); // Simulate work
+    }
+    return NULL;
+}
+
+void initialize_queue() {
+    request_queue.front = 0;
+    request_queue.rear = 0;
+    request_queue.count = 0;
+    pthread_mutex_init(&request_queue.lock, NULL);
+    pthread_cond_init(&request_queue.not_empty, NULL);
+    pthread_cond_init(&request_queue.not_full, NULL);
+}
+
+void add_request(int request_id) {
+    pthread_mutex_lock(&request_queue.lock);
+    while (request_queue.count == QUEUE_SIZE) {
+        pthread_cond_wait(&request_queue.not_full, &request_queue.lock);
+    }
+    request_queue.queue[request_queue.rear].request_id = request_id;
+    request_queue.rear = (request_queue.rear + 1) % QUEUE_SIZE;
+    request_queue.count++;
+    pthread_cond_signal(&request_queue.not_empty);
+    pthread_mutex_unlock(&request_queue.lock);
+}
+
+int main() {
+    pthread_t threads[NUM_THREADS];
+    initialize_queue();
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_create(&threads[i], NULL, worker_thread, NULL);
+    }
+
+    for (int i = 0; i < 20; i++) {
+        add_request(i);
+        printf("Added request %d\n", i);
+        sleep(1); // Simulate incoming requests
+    }
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_cancel(threads[i]);
+        pthread_join(threads[i], NULL);
+    }
+
+    return 0;
+}
+```
+
+## Drill 3: producer-consumer model
+
+```c
+/*
+ * Micro-challenge: Implement a producer-consumer model for a multi-threaded web server.
+ * The server should handle incoming HTTP requests using a fixed-size thread pool.
+ * The master thread (producer) will accept incoming connections and add them to a bounded FIFO queue.
+ * Worker threads (consumers) will process these requests concurrently.
+ * Ensure proper synchronization to avoid race conditions and deadlocks.
+ */
+void process_requests(void) {
+    // TODO: Implement your solution here
+}
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <assert.h>
+
+#define QUEUE_SIZE 5
+
+typedef struct {
+    int request_id;
+} Request;
+
+typedef struct {
+    Request requests[QUEUE_SIZE];
+    int front, rear, count;
+    pthread_mutex_t mutex;
+    pthread_cond_t not_empty;
+    pthread_cond_t not_full;
+} RequestQueue;
+
+RequestQueue queue;
+
+void initialize_queue() {
+    queue.front = 0;
+    queue.rear = 0;
+    queue.count = 0;
+    pthread_mutex_init(&queue.mutex, NULL);
+    pthread_cond_init(&queue.not_empty, NULL);
+    pthread_cond_init(&queue.not_full, NULL);
+}
+
+void enqueue(Request req) {
+    pthread_mutex_lock(&queue.mutex);
+    while (queue.count == QUEUE_SIZE) {
+        pthread_cond_wait(&queue.not_full, &queue.mutex);
+    }
+    queue.requests[queue.rear] = req;
+    queue.rear = (queue.rear + 1) % QUEUE_SIZE;
+    queue.count++;
+    pthread_cond_signal(&queue.not_empty);
+    pthread_mutex_unlock(&queue.mutex);
+}
+
+Request dequeue() {
+    pthread_mutex_lock(&queue.mutex);
+    while (queue.count == 0) {
+        pthread_cond_wait(&queue.not_empty, &queue.mutex);
+    }
+    Request req = queue.requests[queue.front];
+    queue.front = (queue.front + 1) % QUEUE_SIZE;
+    queue.count--;
+    pthread_cond_signal(&queue.not_full);
+    pthread_mutex_unlock(&queue.mutex);
+    return req;
+}
+
+void* worker_thread(void* arg) {
+    while (1) {
+        Request req = dequeue();
+        printf("Processing request ID: %d\n", req.request_id);
+        // Simulate request processing
+        sleep(1);
+    }
+    return NULL;
+}
+
+int main() {
+    initialize_queue();
+
+    // Create worker threads
+    const int num_workers = 3;
+    pthread_t workers[num_workers];
+    for (int i = 0; i < num_workers; i++) {
+        pthread_create(&workers[i], NULL, worker_thread, NULL);
+    }
+
+    // Simulate incoming requests
+    for (int i = 0; i < 10; i++) {
+        Request req = { .request_id = i };
+        enqueue(req);
+        printf("Enqueued request ID: %d\n", req.request_id);
+        sleep(1); // Simulate time between requests
+    }
+
+    // Join worker threads (not reachable in this example)
+    for (int i = 0; i < num_workers; i++) {
+        pthread_cancel(workers[i]);
+    }
+
+    return 0;
+}
+```
+
+## Drill 4: synchronization
+
+```c
+/*
+ * Micro-challenge: Implement a function that allows multiple threads to safely 
+ * read from and write to a shared log. The function should handle GET requests 
+ * as writers (which append to the log) and POST requests as readers (which 
+ * read the entire log). Ensure that the implementation uses proper synchronization 
+ * mechanisms to avoid race conditions and ensure thread safety.
+ */
+void handle_request(int request_type) {
+    // TODO: Implement your solution here
+}
+
+int main() {
+    // Test Harness
+    int get_request = 1; // Simulating a GET request
+    int post_request = 2; // Simulating a POST request
+
+    // Call the target function with a GET request
+    handle_request(get_request);
+    // Here you would assert that the log has been updated correctly.
+
+    // Call the target function with a POST request
+    handle_request(post_request);
+    // Here you would assert that the log has been read correctly.
+
+    return 0;
+}
+```
+
+## Drill 5: mutex
+
+```c
+/*
+ * Micro-challenge: Implement a function that logs requests to a shared log structure.
+ * The function should handle both GET and POST requests. 
+ * GET requests will append entries to the log and require exclusive access.
+ * POST requests will read the log and can be handled concurrently.
+ * Use mutexes to ensure proper synchronization between threads accessing the log.
+ */
+void handle_request(int request_type) {
+    // TODO: Implement your solution here
+}
+
+#include <stdio.h>
+#include <pthread.h>
+#include <assert.h>
+
+pthread_mutex_t log_mutex;
+char server_log[1024] = ""; // Dummy log storage
+
+void handle_request(int request_type) {
+    // TODO: Implement your solution here
+}
+
+void test_handle_request() {
+    // Simulate a GET request
+    pthread_mutex_lock(&log_mutex);
+    // Simulate appending to log
+    snprintf(server_log, sizeof(server_log), "GET request logged\n");
+    pthread_mutex_unlock(&log_mutex);
+
+    // Simulate a POST request
+    pthread_mutex_lock(&log_mutex);
+    // Simulate reading from log
+    printf("Log contents: %s", server_log);
+    pthread_mutex_unlock(&log_mutex);
+}
+
+int main() {
+    pthread_mutex_init(&log_mutex, NULL);
+
+    // Test GET request
+    handle_request(0); // 0 for GET
+    // Test POST request
+    handle_request(1); // 1 for POST
+
+    // Verify the log contains the expected output
+    assert(strcmp(server_log, "GET request logged\n") == 0);
+
+    pthread_mutex_destroy(&log_mutex);
+    return 0;
+}
+```
+
+## Drill 6: condition variables
+
+```c
+/*
+ * Micro-challenge: Implement a logging mechanism for a multi-threaded web server using condition variables.
+ * The server should allow multiple clients to read from the log concurrently (POST requests) while ensuring
+ * that only one client can write to the log at a time (GET requests). Use condition variables to manage
+ * synchronization between reader and writer threads, ensuring that writers have priority over readers.
+ */
+
+void manage_log(void) {
+    // TODO: Implement your solution here
+}
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <assert.h>
+
+#define NUM_READERS 5
+#define NUM_WRITERS 2
+
+pthread_mutex_t log_mutex;
+pthread_cond_t log_cond;
+int readers_count = 0;
+int writers_count = 0;
+
+void* reader(void* arg) {
+    pthread_mutex_lock(&log_mutex);
+    while (writers_count > 0) {
+        pthread_cond_wait(&log_cond, &log_mutex);
+    }
+    readers_count++;
+    pthread_mutex_unlock(&log_mutex);
+
+    // Simulate reading from log
+    printf("Reader %d is reading the log.\n", *(int*)arg);
+    sleep(1); // Simulate time taken to read
+
+    pthread_mutex_lock(&log_mutex);
+    readers_count--;
+    if (readers_count == 0) {
+        pthread_cond_signal(&log_cond);
+    }
+    pthread_mutex_unlock(&log_mutex);
+    return NULL;
+}
+
+void* writer(void* arg) {
+    pthread_mutex_lock(&log_mutex);
+    writers_count++;
+    while (readers_count > 0) {
+        pthread_cond_wait(&log_cond, &log_mutex);
+    }
+
+    // Simulate writing to log
+    printf("Writer %d is writing to the log.\n", *(int*)arg);
+    sleep(2); // Simulate time taken to write
+
+    writers_count--;
+    pthread_cond_signal(&log_cond);
+    pthread_mutex_unlock(&log_mutex);
+    return NULL;
+}
+
+int main() {
+    pthread_t readers[NUM_READERS], writers[NUM_WRITERS];
+    int reader_ids[NUM_READERS], writer_ids[NUM_WRITERS];
+
+    pthread_mutex_init(&log_mutex, NULL);
+    pthread_cond_init(&log_cond, NULL);
+
+    // Create reader threads
+    for (int i = 0; i < NUM_READERS; i++) {
+        reader_ids[i] = i + 1;
+        pthread_create(&readers[i], NULL, reader, &reader_ids[i]);
+    }
+
+    // Create writer threads
+    for (int i = 0; i < NUM_WRITERS; i++) {
+        writer_ids[i] = i + 1;
+        pthread_create(&writers[i], NULL, writer, &writer_ids[i]);
+    }
+
+    // Join reader threads
+    for (int i = 0; i < NUM_READERS; i++) {
+        pthread_join(readers[i], NULL);
+    }
+
+    // Join writer threads
+    for (int i = 0; i < NUM_WRITERS; i++) {
+        pthread_join(writers[i], NULL);
+    }
+
+    pthread_mutex_destroy(&log_mutex);
+    pthread_cond_destroy(&log_cond);
+    return 0;
+}
+```
+
+## Drill 7: reader-writer lock
+
+```c
+/*
+ * Micro-challenge: Implement a reader-writer lock for a server log.
+ * The server log must allow multiple concurrent readers (GET requests) 
+ * while ensuring that only one writer (POST request) can write to the log 
+ * at any given time. Additionally, if both readers and writers are waiting, 
+ * writers should be given priority to prevent starvation.
+ */
+
+void manage_server_log(void) {
+    // TODO: Implement your solution here
+}
+
+#include <stdio.h>
+#include <pthread.h>
+#include <assert.h>
+#include <unistd.h>
+
+#define NUM_READERS 5
+#define NUM_WRITERS 2
+
+pthread_rwlock_t rwlock;
+int log_entries = 0;
+
+void* reader(void* arg) {
+    int id = *((int*)arg);
+    for (int i = 0; i < 3; i++) {
+        pthread_rwlock_rdlock(&rwlock);
+        printf("Reader %d: Reading log entry count: %d\n", id, log_entries);
+        pthread_rwlock_unlock(&rwlock);
+        sleep(1);
+    }
+    return NULL;
+}
+
+void* writer(void* arg) {
+    int id = *((int*)arg);
+    for (int i = 0; i < 3; i++) {
+        pthread_rwlock_wrlock(&rwlock);
+        log_entries++;
+        printf("Writer %d: Added log entry. New count: %d\n", id, log_entries);
+        pthread_rwlock_unlock(&rwlock);
+        sleep(2);
+    }
+    return NULL;
+}
+
+int main() {
+    pthread_t readers[NUM_READERS], writers[NUM_WRITERS];
+    int reader_ids[NUM_READERS], writer_ids[NUM_WRITERS];
+
+    pthread_rwlock_init(&rwlock, NULL);
+
+    for (int i = 0; i < NUM_READERS; i++) {
+        reader_ids[i] = i + 1;
+        pthread_create(&readers[i], NULL, reader, &reader_ids[i]);
+    }
+
+    for (int i = 0; i < NUM_WRITERS; i++) {
+        writer_ids[i] = i + 1;
+        pthread_create(&writers[i], NULL, writer, &writer_ids[i]);
+    }
+
+    for (int i = 0; i < NUM_READERS; i++) {
+        pthread_join(readers[i], NULL);
+    }
+
+    for (int i = 0; i < NUM_WRITERS; i++) {
+        pthread_join(writers[i], NULL);
+    }
+
+    pthread_rwlock_destroy(&rwlock);
+    return 0;
+}
+```
+
+## Drill 8: exclusive access
+
+```c
+/*
+ * Micro-challenge: Implement a logging function that allows multiple concurrent clients to read from the log while ensuring that only one client can write to the log at a time. 
+ * Use exclusive access to manage the log entries, ensuring that GET requests (which write to the log) have exclusive access while POST requests (which read from the log) can be handled concurrently.
+ */
+
+void manage_log_access(void) {
+    // TODO: Implement your solution here
+}
+
+#include <stdio.h>
+#include <pthread.h>
+#include <assert.h>
+
+#define MAX_LOG_ENTRIES 10
+
+typedef struct {
+    char entries[MAX_LOG_ENTRIES][256];
+    int count;
+    pthread_mutex_t lock;
+    pthread_cond_t can_read;
+    pthread_cond_t can_write;
+    int readers;
+    int writers_waiting;
+} Log;
+
+Log server_log;
+
+void initialize_log() {
+    server_log.count = 0;
+    server_log.readers = 0;
+    server_log.writers_waiting = 0;
+    pthread_mutex_init(&server_log.lock, NULL);
+    pthread_cond_init(&server_log.can_read, NULL);
+    pthread_cond_init(&server_log.can_write, NULL);
+}
+
+void add_log_entry(const char *entry) {
+    pthread_mutex_lock(&server_log.lock);
+    while (server_log.writers_waiting > 0 || server_log.readers > 0) {
+        pthread_cond_wait(&server_log.can_write, &server_log.lock);
+    }
+    snprintf(server_log.entries[server_log.count++], 256, "%s", entry);
+    pthread_cond_broadcast(&server_log.can_read);
+    pthread_mutex_unlock(&server_log.lock);
+}
+
+void read_log_entries(char entries[MAX_LOG_ENTRIES][256], int *count) {
+    pthread_mutex_lock(&server_log.lock);
+    while (server_log.writers_waiting > 0) {
+        pthread_cond_wait(&server_log.can_read, &server_log.lock);
+    }
+    server_log.readers++;
+    pthread_mutex_unlock(&server_log.lock);
+
+    for (int i = 0; i < server_log.count; i++) {
+        snprintf(entries[i], 256, "%s", server_log.entries[i]);
+    }
+    *count = server_log.count;
+
+    pthread_mutex_lock(&server_log.lock);
+    server_log.readers--;
+    if (server_log.readers == 0) {
+        pthread_cond_signal(&server_log.can_write);
+    }
+    pthread_mutex_unlock(&server_log.lock);
+}
+
+int main() {
+    initialize_log();
+
+    // Simulate adding log entries
+    add_log_entry("GET request received");
+    add_log_entry("POST request received");
+
+    // Simulate reading log entries
+    char entries[MAX_LOG_ENTRIES][256];
+    int count;
+    read_log_entries(entries, &count);
+
+    // Assertions to verify the log entries
+    assert(count == 2);
+    assert(strcmp(entries[0], "GET request received") == 0);
+    assert(strcmp(entries[1], "POST request received") == 0);
+
+    printf("Log entries verified successfully.\n");
+
+    return 0;
+}
+```
+
+## Drill 9: concurrent read access
+
+```c
+/*
+ * Micro-challenge: Implement a function that allows multiple clients to concurrently read from a shared log.
+ * The function should ensure that multiple GET requests can access the log simultaneously while 
+ * a POST request (which modifies the log) must wait for exclusive access.
+ * Use reader-writer synchronization to achieve this.
+ */
+void handle_request(); // Target Function
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <string.h>
+#include <unistd.h>
+
+#define MAX_LOG_ENTRIES 100
+#define LOG_ENTRY_SIZE 256
+
+char server_log[MAX_LOG_ENTRIES][LOG_ENTRY_SIZE];
+int log_count = 0;
+
+pthread_mutex_t log_mutex;
+pthread_cond_t log_cond;
+
+void *get_request(void *arg) {
+    // Simulate reading from the log
+    pthread_mutex_lock(&log_mutex);
+    for (int i = 0; i < log_count; i++) {
+        printf("GET: %s\n", server_log[i]);
+    }
+    pthread_mutex_unlock(&log_mutex);
+    return NULL;
+}
+
+void *post_request(void *arg) {
+    char *entry = (char *)arg;
+    pthread_mutex_lock(&log_mutex);
+    if (log_count < MAX_LOG_ENTRIES) {
+        strncpy(server_log[log_count++], entry, LOG_ENTRY_SIZE);
+        printf("POST: Added log entry: %s\n", entry);
+    } else {
+        printf("POST: Log is full, cannot add entry.\n");
+    }
+    pthread_mutex_unlock(&log_mutex);
+    return NULL;
+}
+
+int main() {
+    pthread_t threads[10];
+    char *log_entry1 = "Client 1 accessed the server.";
+    char *log_entry2 = "Client 2 accessed the server.";
+    
+    pthread_mutex_init(&log_mutex, NULL);
+    pthread_cond_init(&log_cond, NULL);
+
+    // Simulate multiple GET requests
+    for (int i = 0; i < 5; i++) {
+        pthread_create(&threads[i], NULL, get_request, NULL);
+    }
+
+    // Simulate a POST request
+    pthread_create(&threads[5], NULL, post_request, log_entry1);
+    
+    // Simulate another GET request
+    pthread_create(&threads[6], NULL, get_request, NULL);
+
+    // Simulate another POST request
+    pthread_create(&threads[7], NULL, post_request, log_entry2);
+
+    // Wait for all threads to finish
+    for (int i = 0; i < 8; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    pthread_mutex_destroy(&log_mutex);
+    pthread_cond_destroy(&log_cond);
+    return 0;
+}
+```
+
+## Drill 10: error checking
+
+```c
+/*
+ * Micro-challenge: Implement a function that takes an integer input and returns its square.
+ * The function must check for invalid inputs, specifically if the input is negative.
+ * If the input is negative, the function should return -1 to indicate an error.
+ * Otherwise, it should return the square of the input.
+ */
+int square(int num) {
+    // TODO: Implement your solution here
+}
+
+#include <stdio.h>
+#include <assert.h>
+
+int square(int num); // Function prototype
+
+int main() {
+    // Test cases for the square function
+    assert(square(2) == 4);      // Positive input
+    assert(square(0) == 0);      // Zero input
+    assert(square(-3) == -1);    // Negative input (error case)
+    assert(square(5) == 25);     // Positive input
+
+    printf("All test cases passed!\n");
+    return 0;
+}
+```
+
+## Drill 11: logging
+
+```c
+/*
+ * Micro-challenge: Implement a logging function for a multi-threaded web server.
+ * The function should log the details of each HTTP request processed by the server.
+ * Ensure that the log captures the request type (GET or POST), the timestamp of the request,
+ * and any relevant statistics. Use appropriate synchronization mechanisms to handle concurrent
+ * access to the log from multiple threads.
+ */
+
+void log_request(const char *request_type, const char *timestamp, const char *details) {
+    // TODO: Implement your solution here
+}
+
+int main() {
+    // Test Harness
+    const char *request_type_get = "GET";
+    const char *request_type_post = "POST";
+    const char *timestamp = "2023-10-01T12:00:00Z";
+    const char *details_get = "Requested resource: /index.html";
+    const char *details_post = "Submitted data: {\"key\": \"value\"}";
+
+    // Simulate logging a GET request
+    log_request(request_type_get, timestamp, details_get);
+    
+    // Simulate logging a POST request
+    log_request(request_type_post, timestamp, details_post);
+
+    // Assertions to verify logging behavior (pseudo-code, replace with actual checks)
+    // assert(log_contains("GET", "/index.html"));
+    // assert(log_contains("POST", "{\"key\": \"value\"}"));
+
+    return 0;
+}
+```
+
+## Drill 12: request handling
+
+```c
+/*
+ * Micro-challenge: Implement a function to handle HTTP requests in a multi-threaded web server.
+ * The function should differentiate between GET and POST requests, updating a shared log accordingly.
+ * GET requests should append an entry to the log, while POST requests should return the current log contents.
+ * Ensure proper synchronization to handle concurrent access to the log.
+ */
+
+void handle_request(int client_socket) {
+    // TODO: Implement your solution here
+}
+
+int main() {
+    int client_socket = 0; // Dummy input for testing
+    // Simulate a GET request
+    client_socket = 1; // Example socket for GET
+    handle_request(client_socket);
+    // Assert expected behavior for GET request
+    // (Assertions would go here, but are omitted for brevity)
+
+    // Simulate a POST request
+    client_socket = 2; // Example socket for POST
+    handle_request(client_socket);
+    // Assert expected behavior for POST request
+    // (Assertions would go here, but are omitted for brevity)
+
+    return 0;
+}
+```
+
+## Drill 13: statistics collection
+
+```c
+/*
+ * Micro-challenge: Implement a function to collect and return statistics for a web server.
+ * The function should gather the following statistics for each request:
+ * - Request arrival time
+ * - Request dispatch time
+ * - Log arrival time
+ * - Log dispatch time
+ * Additionally, it should collect thread-specific statistics such as:
+ * - Total requests handled by the thread
+ * - Total static requests handled by the thread
+ * - Total dynamic requests handled by the thread
+ * - Total POST requests handled by the thread
+ * The statistics should be formatted and returned as a string.
+ */
+void collect_statistics(void) {
+    // TODO: Implement your solution here
+}
+
+int main() {
+    // Dummy inputs for testing
+    // In a real scenario, these would be replaced with actual request data
+    int dummy_request_id = 1;
+    int dummy_thread_id = 1;
+
+    // Call the target function
+    collect_statistics();
+
+    // Assertions to verify the expected behavior
+    // These would need to be replaced with actual expected values
+    // For example, check if the statistics string is formatted correctly
+    // assert(strcmp(statistics_output, expected_output) == 0);
+
+    return 0;
+}
+```
+
+## Drill 14: UDP communication
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <pthread.h>
+
+// Part 1: Target Function
+/*
+ * Micro-challenge: Implement a UDP server function that listens for incoming messages
+ * on a specified port and echoes back the received messages to the sender. The function
+ * should handle multiple clients concurrently using threads. Ensure that the server can
+ * handle messages of varying lengths and properly manage socket resources.
+ */
+void udp_echo_server(int port) {
+    // TODO: Implement your solution here
+}
+
+// Part 2: Test Harness
+int main() {
+    int port = 8080; // Example port number
+    // Create a thread to run the UDP echo server
+    pthread_t server_thread;
+
+    // Start the UDP echo server in a separate thread
+    if (pthread_create(&server_thread, NULL, (void *(*)(void *))udp_echo_server, (void *)(long)port) != 0) {
+        perror("Failed to create server thread");
+        return EXIT_FAILURE;
+    }
+
+    // Allow some time for the server to start
+    sleep(1);
+
+    // Create a UDP client to send a test message
+    int sockfd;
+    struct sockaddr_in server_addr;
+    char *message = "Hello, UDP Server!";
+    char buffer[1024];
+
+    // Create socket
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        perror("Socket creation failed");
+        return EXIT_FAILURE;
+    }
+
+    // Server address setup
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(port);
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+
+    // Send message to the server
+    sendto(sockfd, message, strlen(message), 0, (const struct sockaddr *)&server_addr, sizeof(server_addr));
+
+    // Receive echoed message from the server
+    socklen_t len = sizeof(server_addr);
+    int n = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&server_addr, &len);
+    buffer[n] = '\0'; // Null-terminate the received string
+
+    // Assert that the echoed message is correct
+    if (strcmp(buffer, message) == 0) {
+        printf("Test passed: Received expected echo: %s\n", buffer);
+    } else {
+        printf("Test failed: Expected '%s', but received '%s'\n", message, buffer);
+    }
+
+    // Clean up
+    close(sockfd);
+    pthread_cancel(server_thread);
+    pthread_join(server_thread, NULL);
+
+    return EXIT_SUCCESS;
+}
+```
+
+## Drill 15: debugging sleep
+
+```c
+/*
+ * Micro-challenge: Implement a logging function that simulates slow disk I/O 
+ * by introducing a sleep in the critical section. The function should handle 
+ * both reading and writing to a log, ensuring that the sleep duration is 
+ * configurable based on a debug mode flag. 
+ * 
+ * The sleep should occur while holding the lock to simulate the delay in 
+ * accessing the log. Ensure that the logging mechanism is thread-safe and 
+ * correctly handles concurrent access from multiple threads.
+ */
+
+void log_entry(const char *entry) {
+    // TODO: Implement your solution here
+}
+
+int main() {
+    // Test Harness
+    const char *test_entry = "Test log entry";
+    
+    // Call the target function
+    log_entry(test_entry);
+    
+    // Assertions to verify the behavior
+    // (In a real scenario, we would check the log output, but here we will 
+    // just print a confirmation message for demonstration purposes)
+    printf("Log entry added: %s\n", test_entry);
+    
+    return 0;
+}
+```
