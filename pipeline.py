@@ -6,6 +6,7 @@ from typing import List
 
 import openai
 import pdfplumber
+import streamlit as st
 from dotenv import load_dotenv
 from openai import APIConnectionError, APITimeoutError, OpenAI, OpenAIError
 from pydantic import BaseModel
@@ -21,10 +22,20 @@ load_dotenv()
 
 def get_openai_client() -> OpenAI:
     """Create an OpenAI client only when an API-backed pipeline step runs."""
-    if not os.getenv("OPENAI_API_KEY"):
-        raise EnvironmentError("OPENAI_API_KEY is missing. Add it to your .env file.")
+    api_key = os.getenv("OPENAI_API_KEY")
 
-    return OpenAI(timeout=30.0)
+    if not api_key:
+        try:
+            api_key = st.secrets["OPENAI_API_KEY"]
+        except Exception:
+            pass
+
+    if not api_key:
+        raise EnvironmentError(
+            "OPENAI_API_KEY is missing. Add it to your .env file or Streamlit secrets."
+        )
+
+    return OpenAI(api_key=api_key, timeout=30.0)
 
 
 # 2. Define the exact JSON structure we want the AI to return
